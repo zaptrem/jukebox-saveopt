@@ -17,8 +17,8 @@ class MyModel(torch.nn.Module):
     def __init__(self, unique):
         super(MyModel, self).__init__()
         self.weight0 = Parameter(unique +
-            torch.arange(2, device='cuda', dtype=torch.float32))
-        self.weight1 = Parameter(1. + unique + torch.arange(2, device='cuda', dtype=torch.float16))
+            torch.arange(2, device='cpu', dtype=torch.float32))
+        self.weight1 = Parameter(1. + unique + torch.arange(2, device='cpu', dtype=torch.float16))
 
     @staticmethod
     def ops(input, weight0, weight1):
@@ -36,7 +36,7 @@ class MyModel(torch.nn.Module):
 
 class TestMultipleModelsOptimizersLosses(unittest.TestCase):
     def setUp(self):
-        self.x = torch.ones((2), device='cuda', dtype=torch.float32)
+        self.x = torch.ones((2), device='cpu', dtype=torch.float32)
         common_init(self)
 
     def tearDown(self):

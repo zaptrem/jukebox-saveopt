@@ -55,7 +55,7 @@ class TestFusedAdam(unittest.TestCase):
         adam_option = {'lr':5e-4, 'betas':(0.9, 0.999), 'eps':1e-08,
             'weight_decay':0, 'amsgrad':False}
 
-        tensor = torch.rand(nelem, dtype=param_type, device='cuda')
+        tensor = torch.rand(nelem, dtype=param_type, device='cpu')
         ref_param, tst_param, ref_optim, tst_optim = \
             self.gen_param_optim([tensor], adam_option)
 
@@ -79,7 +79,7 @@ class TestFusedAdam(unittest.TestCase):
         adam_option = {'lr':5e-4, 'betas':(0.9, 0.999), 'eps':1e-08,
             'weight_decay':0, 'amsgrad':False}
 
-        tensor = torch.rand(nelem, dtype=torch.float, device='cuda')
+        tensor = torch.rand(nelem, dtype=torch.float, device='cpu')
         ref_param, tst_param, ref_optim, tst_optim = \
             self.gen_param_optim([tensor], adam_option)
 
@@ -99,7 +99,7 @@ class TestFusedAdam(unittest.TestCase):
 
         tensors = []
         for size in sizes:
-            tensors.append(torch.rand(size, dtype=torch.float, device='cuda'))
+            tensors.append(torch.rand(size, dtype=torch.float, device='cpu'))
         ref_param, tst_param, ref_optim, tst_optim = \
             self.gen_param_optim(tensors, adam_option)
 
@@ -116,7 +116,7 @@ class TestFusedAdam(unittest.TestCase):
         adam_option = {'lr':5e-4, 'betas':(0.9, 0.999), 'eps':1e-08,
             'weight_decay':0, 'amsgrad':False}
 
-        tensor = torch.rand(nelem, dtype=torch.float, device='cuda')
+        tensor = torch.rand(nelem, dtype=torch.float, device='cpu')
         ref_param, tst_param, ref_optim, tst_optim = \
             self.gen_param_optim([tensor], adam_option)
 
@@ -135,7 +135,7 @@ class TestFusedAdam(unittest.TestCase):
         adam_option = {'lr':5e-4, 'betas':(0.9, 0.999), 'eps':1e-08,
             'weight_decay':0, 'amsgrad':False}
 
-        tensor = torch.rand(nelem, dtype=torch.float, device='cuda')
+        tensor = torch.rand(nelem, dtype=torch.float, device='cpu')
         ref_param, tst_param, ref_optim, tst_optim = \
             self.gen_param_optim([tensor], adam_option)
 
@@ -160,7 +160,7 @@ class TestFusedAdam(unittest.TestCase):
         adam_option = {'lr':0.01, 'betas':(0.6, 0.9), 'eps':3e-06,
             'weight_decay':0, 'amsgrad':False}
 
-        tensor = torch.rand(nelem, dtype=torch.float, device='cuda')
+        tensor = torch.rand(nelem, dtype=torch.float, device='cpu')
         ref_param, tst_param, ref_optim, tst_optim = \
             self.gen_param_optim([tensor], adam_option)
 

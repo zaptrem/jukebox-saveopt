@@ -164,7 +164,7 @@ class VQVAE(nn.Module):
         return zs
 
     def sample(self, n_samples):
-        zs = [t.randint(0, self.l_bins, size=(n_samples, *z_shape), device='cuda') for z_shape in self.z_shapes]
+        zs = [t.randint(0, self.l_bins, size=(n_samples, *z_shape), device='cpu') for z_shape in self.z_shapes]
         return self.decode(zs)
 
     def forward(self, x, hps, loss_fn='l1'):

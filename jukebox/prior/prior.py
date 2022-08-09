@@ -34,7 +34,7 @@ class SimplePrior(nn.Module):
     def __init__(self, z_shapes, l_bins, encoder, decoder, level,
                  downs_t, strides_t, labels, prior_kwargs, x_cond_kwargs, y_cond_kwargs,
                  prime_kwargs, copy_input, labels_v3=False,
-                 merged_decoder=False, single_enc_dec=False, device='cuda'):
+                 merged_decoder=False, single_enc_dec=False, device='cpu'):
         super().__init__()
 
         self.use_tokens = prime_kwargs.pop('use_tokens')
@@ -185,7 +185,7 @@ class SimplePrior(nn.Module):
             if cond is not None:
                 assert_shape(cond, (N, dims, self.prior_width))
             else:
-                conds[i] = t.zeros((N, dims, self.prior_width), dtype=t.float, device='cuda')
+                conds[i] = t.zeros((N, dims, self.prior_width), dtype=t.float, device='cpu')
 
         return t.cat(xs, dim=1), t.cat(conds, dim=1)
 
@@ -311,7 +311,7 @@ class SimplePrior(nn.Module):
             encoder_kv = self.prime_x_out(encoder_kv)
             prime_loss = nn.functional.cross_entropy(encoder_kv.view(-1, self.prime_bins), prime_t.view(-1)) / np.log(2.)
         else:
-            prime_loss = t.tensor(0.0, device='cuda')
+            prime_loss = t.tensor(0.0, device='cpu')
         return prime_loss
 
     def z_forward(self, z, z_conds=[], y=None, fp16=False, get_preds=False, get_attn_weights=False):

@@ -34,8 +34,8 @@ N, D_in, D_out = 64, 1024, 16
 # The "training loop" in each process just uses this fake batch over and over.
 # https://github.com/NVIDIA/apex/tree/master/examples/imagenet provides a more realistic
 # example of distributed data sampling for both training and validation.
-x = torch.randn(N, D_in, device='cuda')
-y = torch.randn(N, D_out, device='cuda')
+x = torch.randn(N, D_in, device='cpu')
+y = torch.randn(N, D_out, device='cpu')
 
 model = torch.nn.Linear(D_in, D_out).cuda()
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
