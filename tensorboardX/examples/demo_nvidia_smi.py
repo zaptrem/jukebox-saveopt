@@ -16,7 +16,7 @@ except ImportError:
 with SummaryWriter() as writer:
     x = []
     for n_iter in range(50):
-        x.append(torch.Tensor(1000, 1000).cuda())
+        x.append(torch.Tensor(1000, 1000))
         res = nvidia_smi.nvmlDeviceGetUtilizationRates(handle)
         writer.add_scalar('nv/gpu', res.gpu, n_iter)
         res = nvidia_smi.nvmlDeviceGetMemoryInfo(handle)

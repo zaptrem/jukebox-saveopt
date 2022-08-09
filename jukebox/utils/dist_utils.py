@@ -20,7 +20,7 @@ def allgather(x):
     return xs
 
 def allreduce(x, op=dist.ReduceOp.SUM):
-    x = torch.tensor(x).float().cuda()
+    x = torch.tensor(x).float()
     dist.all_reduce(x, op=op)
     return x.item()
 

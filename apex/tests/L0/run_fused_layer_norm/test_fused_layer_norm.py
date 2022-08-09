@@ -17,8 +17,8 @@ class TestFusedLayerNorm(unittest.TestCase):
         return self.module(input_.cpu())
     
     def forward_cuda(self, input_):
-        self.module.cuda()
-        return self.module(input_.cuda())
+        self.module
+        return self.module(input_)
     
     def test_forward_cuda(self):
         out_ = self.forward_cuda(self.input_)

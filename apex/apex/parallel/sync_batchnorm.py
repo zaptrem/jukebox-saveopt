@@ -39,10 +39,10 @@ class SyncBatchNorm(_BatchNorm):
 
     Example::
 
-        >>> sbn = apex.parallel.SyncBatchNorm(100).cuda()
-        >>> inp = torch.randn(10, 100, 14, 14).cuda()
+        >>> sbn = apex.parallel.SyncBatchNorm(100)
+        >>> inp = torch.randn(10, 100, 14, 14)
         >>> out = sbn(inp)
-        >>> inp = torch.randn(3, 100, 20).cuda()
+        >>> inp = torch.randn(3, 100, 20)
         >>> out = sbn(inp)
     """
 

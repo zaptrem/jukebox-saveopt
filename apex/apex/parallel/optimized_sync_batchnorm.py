@@ -45,14 +45,14 @@ class SyncBatchNorm(_BatchNorm):
 
     Examples::
         >>> # channel first tensor
-        >>> sbn = apex.parallel.SyncBatchNorm(100).cuda()
-        >>> inp = torch.randn(10, 100, 14, 14).cuda()
+        >>> sbn = apex.parallel.SyncBatchNorm(100)
+        >>> inp = torch.randn(10, 100, 14, 14)
         >>> out = sbn(inp)
-        >>> inp = torch.randn(3, 100, 20).cuda()
+        >>> inp = torch.randn(3, 100, 20)
         >>> out = sbn(inp)
         >>> # channel last tensor
-        >>> sbn = apex.parallel.SyncBatchNorm(100, channel_last=True).cuda()
-        >>> inp = torch.randn(10, 14, 14, 100).cuda()
+        >>> sbn = apex.parallel.SyncBatchNorm(100, channel_last=True)
+        >>> inp = torch.randn(10, 14, 14, 100)
     """
 
     def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True, track_running_stats=True, process_group=None, channel_last=False):
