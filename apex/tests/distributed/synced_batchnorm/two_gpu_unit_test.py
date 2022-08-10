@@ -80,7 +80,7 @@ eps = 1e-5
 mean, var_biased = syncbn.welford_mean_var(inp_t)
 inv_std = 1.0 / torch.sqrt(var_biased + eps)
 
-bn = torch.nn.BatchNorm2d(feature_size)
+bn = torch.nn.BatchNorm2d(feature_size).cpu()
 bn.momentum = 1.0
 bn.weight.data = weight_t.clone()
 bn.bias.data = bias_t.clone()
@@ -99,7 +99,7 @@ for param in bn.parameters():
     param.grad = param.grad / args.world_size
 bn_opt = optim.SGD(bn.parameters(), lr=1.0)
 
-sbn = apex.parallel.SyncBatchNorm(feature_size)
+sbn = apex.parallel.SyncBatchNorm(feature_size).cpu()
 sbn.momentum = 1.0
 sbn.weight.data = weight_t.clone()
 sbn.bias.data = bias_t.clone()

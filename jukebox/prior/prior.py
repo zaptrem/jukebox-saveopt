@@ -290,7 +290,7 @@ class SimplePrior(nn.Module):
     def get_encoder_kv(self, prime, fp16=False, sample=False):
         if self.n_tokens != 0 and self.use_tokens:
             if sample:
-                self.prime_prior
+                self.prime_prior.cpu()
             N = prime.shape[0]
             prime_acts = self.prime_prior(prime, None, None, None, fp16=fp16)
             assert_shape(prime_acts, (N, self.prime_loss_dims, self.prime_acts_width))

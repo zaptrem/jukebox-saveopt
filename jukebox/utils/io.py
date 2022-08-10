@@ -77,7 +77,7 @@ def test_simple_loader():
     print(files[:10])
     loader = load_audio
     print("Loader", loader.__name__)
-    x = t.randn(2, 2)
+    x = t.randn(2, 2).cpu()
     x = load(files[0], loader)
     for i,file in enumerate(tqdm(files)):
         x = load(file, loader)

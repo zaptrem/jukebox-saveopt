@@ -52,8 +52,8 @@ the layer explicitly.
 
 ```
 import apex
-input_t = torch.randn(3, 5, 20)
-sbn = apex.parallel.SyncBatchNorm(5)
+input_t = torch.randn(3, 5, 20).cpu()
+sbn = apex.parallel.SyncBatchNorm(5).cpu()
 output_t = sbn(input)
 ```
 

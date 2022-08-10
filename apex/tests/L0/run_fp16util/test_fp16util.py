@@ -52,8 +52,8 @@ class TestFP16Model(unittest.TestCase):
         self.C_in = 3
         self.H_in = 16
         self.W_in = 32
-        self.in_tensor = torch.randn((self.N, self.C_in, self.H_in, self.W_in))
-        self.orig_model = DummyNetWrapper()
+        self.in_tensor = torch.randn((self.N, self.C_in, self.H_in, self.W_in)).cpu()
+        self.orig_model = DummyNetWrapper().cpu()
         self.fp16_model = FP16Model(self.orig_model)
 
     def test_params_and_buffers(self):

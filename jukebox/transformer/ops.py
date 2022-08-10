@@ -60,7 +60,7 @@ ACT_FNS = {
 }
 
 def _move_to_gpu_and_convert_conv_weights_to_fp16(l):
-    l
+    l.cpu()
     if isinstance(l, Conv1D):
         l.w.data = l.w.data.half()
 
