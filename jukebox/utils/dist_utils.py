@@ -45,7 +45,7 @@ def setup_dist_from_mpi(
     if dist.is_available():
         return _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose)
     else:
-        use_cuda = false # torch.cuda.is_available()
+        use_cuda = torch.cuda.is_available()
         print(f'Using cuda {use_cuda}')
 
         mpi_rank = 0
