@@ -125,7 +125,7 @@ class VQVAE(nn.Module):
             zi_chunks = [t.chunk(z, length_chunks, dim=1) for z in zs_i]
             xi_outs = []
             for i2 in range(length_chunks):
-                zs_i = [z_chunk[i2] for z_chunk in zi_chunks]
+                zs_i = [z_chunk[i2].cuda() for z_chunk in zi_chunks]
                 xi_out = self._decode(zs_i, start_level=start_level, end_level=end_level)
                 xi_outs.append(xi_out.cpu())
             x_outs.append(t.cat(xi_outs, dim=1))
@@ -156,7 +156,7 @@ class VQVAE(nn.Module):
             xi_chunks = t.split(x_i, length_chunks, dim=1)
             zsi_list = []
             for x_i2 in xi_chunks:
-                zs_i2 = self._encode(x_i2, start_level=start_level, end_level=end_level)
+                zs_i2 = self._encode(x_i2.cuda(), start_level=start_level, end_level=end_level)
                 zs_i2 = [z_i.cpu() for z_i in zs_i2]
                 zsi_list.append(zs_i2)
             zs_list.append([t.cat(zs_level_list, dim=1) for zs_level_list in zip(*zsi_list)])

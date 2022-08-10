@@ -137,7 +137,7 @@ def main():
         print("using apex synced BN")
         model = apex.parallel.convert_syncbn_model(model)
 
-    model = model
+    model = model.cuda()
 
     # Scale learning rate based on global batch size
     args.lr = args.lr*float(args.batch_size*args.world_size)/256. 
@@ -165,7 +165,7 @@ def main():
         model = DDP(model, delay_allreduce=True)
 
     # define loss function (criterion) and optimizer
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss().cuda()
 
     # Optionally resume from a checkpoint
     if args.resume:
@@ -257,8 +257,8 @@ class data_prefetcher():
     def __init__(self, loader):
         self.loader = iter(loader)
         self.stream = torch.cuda.Stream()
-        self.mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255]).view(1,3,1,1)
-        self.std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).view(1,3,1,1)
+        self.mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255]).cuda().view(1,3,1,1)
+        self.std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).cuda().view(1,3,1,1)
         # With Amp, it isn't necessary to manually convert data to half.
         # if args.fp16:
         #     self.mean = self.mean.half()
