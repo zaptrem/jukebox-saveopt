@@ -71,7 +71,7 @@ def sample_single_window(zs, labels, sampling_kwargs, level, prior, start, hps, 
     z_conds = prior.get_z_conds(zs, start, end)
     #print(z_conds)
     if z_conds:
-        z_conds = [cond.cpu() for cond in z_conds]
+        z_conds = [cond for cond in z_conds]
     #print(z_conds)
 
     # set y offset, sample_length and lyrics tokens
@@ -282,7 +282,7 @@ def load_prompts(audio_files, duration, hps):
 # Load codes from previous sampling run
 def load_codes(codes_file, duration, priors, hps):
     data = t.load(codes_file, map_location='cpu')
-    zs = [z.cpu() for z in data['zs']]
+    zs = [z for z in data['zs']]
     assert zs[-1].shape[0] == hps.n_samples, f"Expected bs = {hps.n_samples}, got {zs[-1].shape[0]}"
     del data
     if duration is not None:

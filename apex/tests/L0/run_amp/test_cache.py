@@ -68,7 +68,7 @@ class TestCache(unittest.TestCase):
         pass
 
     def train_eval_train_test(self, module, t):
-        model = module(t).cpu()
+        model = module(t)
         optimizer = torch.optim.SGD(model.parameters(), lr=1.0)
 
         _amp_state.allow_incoming_model_not_fp32 = True

@@ -184,7 +184,7 @@ class ConditionalAutoregressive2D(nn.Module):
         N, D = n_samples, self.input_dims
         if sample_t == 0:
             # Fill in start token
-            x = t.empty(n_samples, 1, self.width).cpu()
+            x = t.empty(n_samples, 1, self.width)
             if self.y_cond:
                 x[:, 0] = y_cond.view(N, self.width)
             else:
@@ -219,7 +219,7 @@ class ConditionalAutoregressive2D(nn.Module):
             assert x_cond.shape == (N, D, self.width) or x_cond.shape == (N, 1, self.width), f"Got {x_cond.shape}, expected ({N}, {D}/{1}, {self.width})"
         else:
             assert x_cond is None
-            x_cond = t.zeros((N, 1, self.width), dtype=t.float).cpu()
+            x_cond = t.zeros((N, 1, self.width), dtype=t.float)
 
         with t.no_grad():
             xs, x = [], None
@@ -281,7 +281,7 @@ class ConditionalAutoregressive2D(nn.Module):
             assert x_cond.shape == (N, D, self.width) or x_cond.shape == (N, 1, self.width), f"Got {x_cond.shape}, expected ({N}, {D}/{1}, {self.width})"
         else:
             assert x_cond is None
-            x_cond = t.zeros((N, 1, self.width), dtype=t.float).cpu()
+            x_cond = t.zeros((N, 1, self.width), dtype=t.float)
 
         with t.no_grad():
             if get_preds:
@@ -369,9 +369,9 @@ class ConditionalAutoregressive2D(nn.Module):
         prime = int(self.input_dims//8*7)
         enc_l = self.encoder_dims
         with t.no_grad():
-            y_cond = t.randn(bs, 1, d).cpu() if self.y_cond else None
-            x_cond = t.randn(bs, l, d).cpu() if self.x_cond else None
-            encoder_kv = t.randn(bs, enc_l, d).cpu()
+            y_cond = t.randn(bs, 1, d) if self.y_cond else None
+            x_cond = t.randn(bs, l, d) if self.x_cond else None
+            encoder_kv = t.randn(bs, enc_l, d)
 
             x, preds_sample = self.sample(bs, x_cond, y_cond, encoder_kv, get_preds=True)
             loss, preds_forw = self.forward(x, x_cond, y_cond, encoder_kv, get_preds=True)
@@ -406,7 +406,7 @@ def test_prior(input_shape, encoder_dims, blocks, heads, chunk_size):
                                                     width=width, depth=depth, heads=heads,
                                                     attn_order=attn_order, blocks=blocks,
                                                     x_cond=x_cond, y_cond=y_cond,
-                                                    encoder_dims=encoder_dims, prime_len=prime_len).cpu()
+                                                    encoder_dims=encoder_dims, prime_len=prime_len)
                 prior.training = False
                 prior.check_sample(chunk_size)
                 print(f"Checked x_cond: {x_cond}, y_cond: {y_cond}, attn_order: {attn_order}")

@@ -37,7 +37,7 @@ N, D_in, D_out = 64, 1024, 16
 x = torch.randn(N, D_in, device='cpu')
 y = torch.randn(N, D_out, device='cpu')
 
-model = torch.nn.Linear(D_in, D_out).cpu()
+model = torch.nn.Linear(D_in, D_out)
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
 
 model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
