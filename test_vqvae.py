@@ -17,7 +17,7 @@ import torch.distributed as dist
 if False: # False for windows
 	rank, local_rank, device = setup_dist_from_mpi()
 else:
-	rank, local_rank, device = (0, 0, t.device('cpu') if t.cuda.is_available() else t.device('cpu'))
+	rank, local_rank, device = (0, 0, t.device('cuda') if t.cuda.is_available() else t.device('cpu'))
 	print(device)
 	os.environ["MASTER_ADDR"] = "localhost"
 	os.environ["MASTER_PORT"] = "29500"

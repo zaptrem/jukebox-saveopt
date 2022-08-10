@@ -13,7 +13,7 @@ class TestFP16Optimizer(unittest.TestCase):
         self.N = N
         self.D_in = D_in
         self.D_out = D_out
-        self.x = torch.randn((N, D_in), dtype=torch.float16, device='cpu')
+        self.x = torch.randn((N, D_in), dtype=torch.float16, device='cuda')
         self.ref_model = torch.nn.Linear(D_in, D_out).cuda().half()
         self.tst_model = torch.nn.Linear(D_in, D_out).cuda().half()
         for p,q in zip(self.tst_model.parameters(), self.ref_model.parameters()):

@@ -86,7 +86,7 @@ def check_params_fp32(models):
                     warn_or_err("Found param {} with type {}, expected torch.cuda.FloatTensor.\n"
                         "When using amp.initialize, you need to provide a model with parameters\n"
                         "located on a CUDA device before passing it no matter what optimization level\n"
-                        "you chose. Use model.to('cpu') to use the default device.".format(
+                        "you chose. Use model.to('cuda') to use the default device.".format(
                         name, param.type()))
 
         # Backward compatibility for PyTorch 0.4
@@ -109,7 +109,7 @@ def check_params_fp32(models):
                     warn_or_err("Found buffer {} with type {}, expected torch.cuda.FloatTensor.\n"
                         "When using amp.initialize, you need to provide a model with buffers\n"
                         "located on a CUDA device before passing it no matter what optimization level\n"
-                        "you chose. Use model.to('cpu') to use the default device.".format(
+                        "you chose. Use model.to('cuda') to use the default device.".format(
                         name, buf.type()))
 
 

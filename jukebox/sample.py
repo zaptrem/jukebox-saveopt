@@ -52,7 +52,7 @@ def sample_single_window(zs, labels, sampling_kwargs, level, prior, start, hps, 
     end = start + n_ctx
     zs = [z.to('cpu') for z in zs] # force tokens back onto ram if the notebook did an oopsie
     # get z already sampled at current level
-    z = zs[level][:,start:end].to('cpu')
+    z = zs[level][:,start:end].to('cuda')
 
     if 'sample_tokens' in sampling_kwargs:
         # Support sampling a window shorter than n_ctx
@@ -197,7 +197,7 @@ def sample_level(zs, labels, sampling_kwargs, level, prior, total_length, hop_le
     return zs
 
 # Sample multiple levels
-def _sample(zs, labels, sampling_kwargs, priors, sample_levels, hps, device='cpu'):
+def _sample(zs, labels, sampling_kwargs, priors, sample_levels, hps, device='cuda'):
     alignments = None
     for level in reversed(sample_levels):
         prior = priors[level]
@@ -242,7 +242,7 @@ def _sample(zs, labels, sampling_kwargs, priors, sample_levels, hps, device='cpu
 # Generate ancestral samples given a list of artists and genres
 def ancestral_sample(labels, sampling_kwargs, priors, hps):
     sample_levels = list(range(len(priors)))
-    zs = [t.zeros(hps.n_samples,0,dtype=t.long, device='cpu') for _ in range(len(priors))]
+    zs = [t.zeros(hps.n_samples,0,dtype=t.long, device='cuda') for _ in range(len(priors))]
     zs = _sample(zs, labels, sampling_kwargs, priors, sample_levels, hps)
     return zs
 
@@ -276,7 +276,7 @@ def load_prompts(audio_files, duration, hps):
         xs.extend(xs)
     xs = xs[:hps.n_samples]
     x = t.stack([t.from_numpy(x) for x in xs])
-    #x = x.to('cpu', non_blocking=True)
+    #x = x.to('cuda', non_blocking=True)
     return x
 
 # Load codes from previous sampling run
@@ -343,7 +343,7 @@ def save_samples(model, device, hps, sample_hps):
         metas.extend(metas)
     metas = metas[:hps.n_samples]
 
-    labels = [prior.labeller.get_batch_labels(metas, 'cpu') for prior in priors]
+    labels = [prior.labeller.get_batch_labels(metas, 'cuda') for prior in priors]
     for label in labels:
         assert label['y'].shape[0] == hps.n_samples
 

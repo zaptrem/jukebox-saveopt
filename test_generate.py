@@ -15,7 +15,7 @@ import torch.distributed as dist
 if False: # False for windows
 	rank, local_rank, device = setup_dist_from_mpi()
 else:
-	rank, local_rank, device = (0, 0, t.device('cpu') if t.cuda.is_available() else t.device('cpu'))
+	rank, local_rank, device = (0, 0, t.device('cuda') if t.cuda.is_available() else t.device('cpu'))
 	print(device)
 	os.environ["MASTER_ADDR"] = "localhost"
 	os.environ["MASTER_PORT"] = "29500"
@@ -100,7 +100,7 @@ if True:
 	empty_cache()
 	top_prior=None
 upsamplers = [make_prior(setup_hparams(prior, dict(restore_prior=f'models/5b/prior_level_{level}.pth.tar')), vqvae, 'cpu') for level, prior in enumerate(priors[:-1])]
-labels[:2] = [prior.labeller.get_batch_labels(metas, 'cpu') for prior in upsamplers]
+labels[:2] = [prior.labeller.get_batch_labels(metas, 'cuda') for prior in upsamplers]
 
 zs = upsample(zs, labels, sampling_kwargs, [*upsamplers, top_prior], hps)
 

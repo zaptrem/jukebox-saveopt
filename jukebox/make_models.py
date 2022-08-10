@@ -92,7 +92,7 @@ def restore_opt(opt, shd, checkpoint_path):
     if "step" in checkpoint:
         shd.step(checkpoint['step'])
 
-def make_vqvae(hps, device='cpu'):
+def make_vqvae(hps, device='cuda'):
     from jukebox.vqvae.vqvae import VQVAE
     block_kwargs = dict(width=hps.width, depth=hps.depth, m_conv=hps.m_conv,
                         dilation_growth_rate=hps.dilation_growth_rate,
@@ -131,7 +131,7 @@ def make_vqvae(hps, device='cpu'):
         freeze_model(vqvae)
     return vqvae
 
-def make_prior(hps, vqvae, device='cpu'):
+def make_prior(hps, vqvae, device='cuda'):
     from jukebox.prior.prior import SimplePrior
 
     prior_kwargs = dict(input_shape=(hps.n_ctx,), bins=vqvae.l_bins,

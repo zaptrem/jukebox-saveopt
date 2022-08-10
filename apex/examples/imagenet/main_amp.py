@@ -274,8 +274,8 @@ class data_prefetcher():
             return
         # if record_stream() doesn't work, another option is to make sure device inputs are created
         # on the main stream.
-        # self.next_input_gpu = torch.empty_like(self.next_input, device='cpu')
-        # self.next_target_gpu = torch.empty_like(self.next_target, device='cpu')
+        # self.next_input_gpu = torch.empty_like(self.next_input, device='cuda')
+        # self.next_target_gpu = torch.empty_like(self.next_target, device='cuda')
         # Need to make sure the memory allocated for next_* is not still in use by the main stream
         # at the time we start copying to next_*:
         # self.stream.wait_stream(torch.cuda.current_stream())

@@ -165,9 +165,9 @@ def evaluate(model, orig_model, logger, metrics, data_processor, hps):
             else:
                 y = None
 
-            x = x.to('cpu', non_blocking=True)
+            x = x.to('cuda', non_blocking=True)
             if y is not None:
-                y = y.to('cpu', non_blocking=True)
+                y = y.to('cuda', non_blocking=True)
 
             x_in = x = audio_preprocess(x, hps)
             log_input_output = (i==0)
@@ -214,9 +214,9 @@ def train(model, orig_model, opt, shd, scalar, ema, logger, metrics, data_proces
         else:
             y = None
 
-        x = x.to('cpu', non_blocking=True)
+        x = x.to('cuda', non_blocking=True)
         if y is not None:
-            y = y.to('cpu', non_blocking=True)
+            y = y.to('cuda', non_blocking=True)
 
         x_in = x = audio_preprocess(x, hps)
         log_input_output = (logger.iters % hps.save_iters == 0)

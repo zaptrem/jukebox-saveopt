@@ -27,12 +27,12 @@ def allreduce(x, op=dist.ReduceOp.SUM):
 def allgather_lists(xs):
     bs = len(xs)
     total_bs = dist.get_world_size()*len(xs)
-    lengths = torch.tensor([len(x) for x in xs], dtype=t.long, device='cpu')
+    lengths = torch.tensor([len(x) for x in xs], dtype=t.long, device='cuda')
     lengths = allgather(lengths)
     assert lengths.shape == (total_bs,)
     max_length = torch.max(lengths).item()
 
-    xs = torch.tensor([[*x, *[0]*(max_length - len(x))] for x in xs], device='cpu')
+    xs = torch.tensor([[*x, *[0]*(max_length - len(x))] for x in xs], device='cuda')
     assert xs.shape == (bs, max_length), f'Expected {(bs, max_length)}, got {xs.shape}'
     xs = allgather(xs)
     assert xs.shape == (total_bs,max_length), f'Expected {(total_bs, max_length)}, got {xs.shape}'

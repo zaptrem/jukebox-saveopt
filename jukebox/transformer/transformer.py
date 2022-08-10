@@ -95,7 +95,7 @@ class Transformer(nn.Module):
                  m_attn=0.25, m_mlp=1.,
                  checkpoint_attn=0, checkpoint_mlp=0, checkpoint_res=0,
                  attn_order=0, blocks=None, spread=None,
-                 encoder_dims=None, prime_len=None, device='cpu'):
+                 encoder_dims=None, prime_len=None, device='cuda'):
         super().__init__()
         self.n_in = n_in
         self.n_ctx = n_ctx
