@@ -84,11 +84,7 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
     for attempt_idx in range(n_attempts):
         try:
             print("backend: " + backend)
-            if (not dist.is_initialized()):
-                print("dist not initialized, doing that now")
-                dist.init_process_group(backend=backend, init_method=f"env://")
-            else:
-                print("dist already initialized")
+            dist.init_process_group(backend=backend, init_method=f"env://")
             assert dist.get_rank() == mpi_rank
 
             use_cuda = False #torch.cuda.is_available()
