@@ -52,7 +52,7 @@ def setup_dist_from_mpi(
         local_rank = 0
 
         device = torch.device("cuda", local_rank) if use_cuda else torch.device("cpu")
-        #torch.cuda.set_device(local_rank)
+        torch.cuda.set_device(local_rank)
 
         return mpi_rank, local_rank, device
 
@@ -95,7 +95,7 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
             print(f'Using cuda {use_cuda}')
             local_rank = mpi_rank % 8
             device = torch.device("cuda", local_rank) if use_cuda else torch.device("cpu")
-            #torch.cuda.set_device(local_rank)
+            torch.cuda.set_device(local_rank)
 
             return mpi_rank, local_rank, device
         except RuntimeError as e:
