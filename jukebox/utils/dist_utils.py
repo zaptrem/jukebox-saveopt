@@ -45,7 +45,7 @@ def setup_dist_from_mpi(
     if dist.is_available():
         return _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose)
     else:
-        use_cuda = False # torch.cuda.is_available()
+        use_cuda = false # torch.cuda.is_available()
         print(f'Using cuda {use_cuda}')
 
         mpi_rank = 0
@@ -73,8 +73,8 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
 
     # Pin this rank to a specific GPU on the node
     local_rank = mpi_rank % 8
-    #if torch.cuda.is_available():
-    #    torch.cuda.set_device(local_rank)
+    if torch.cuda.is_available():
+        torch.cuda.set_device(local_rank)
 
     if verbose:
         print(f"Connecting to master_addr: {master_addr}")
@@ -86,7 +86,7 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
             dist.init_process_group(backend=backend, init_method=f"env://")
             assert dist.get_rank() == mpi_rank
 
-            use_cuda = False #torch.cuda.is_available()
+            use_cuda = torch.cuda.is_available()
             print(f'Using cuda {use_cuda}')
             local_rank = mpi_rank % 8
             device = torch.device("cuda", local_rank) if use_cuda else torch.device("cpu")
