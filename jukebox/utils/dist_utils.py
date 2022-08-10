@@ -83,6 +83,7 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
     # We guard against the failure and then retry
     for attempt_idx in range(n_attempts):
         try:
+            print("backend: " + backend)
             dist.init_process_group(backend=backend, init_method=f"env://")
             assert dist.get_rank() == mpi_rank
 
