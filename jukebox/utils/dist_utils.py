@@ -53,7 +53,7 @@ def setup_dist_from_mpi(
         mpi_rank = 0
         local_rank = 0
 
-        device = torch.device(xm.xla_device(), local_rank) if use_xla else torch.device("cpu")
+        device = xm.xla_device()
         #torch.cuda.set_device(local_rank)
 
         return mpi_rank, local_rank, device
@@ -93,7 +93,7 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
             use_xla = True
             print(f'Using xla {use_xla}')
             local_rank = mpi_rank % 8
-            device = torch.device(xm.xla_device(), local_rank) if use_xla else torch.device("cpu")
+            device = xm.xla_device() # TODO: Fix multi-TPU training
             #torch.cuda.set_device(local_rank)
 
             return mpi_rank, local_rank, device
