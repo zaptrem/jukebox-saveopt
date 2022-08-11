@@ -79,6 +79,7 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
         #torch.cuda.set_device(local_rank)
 
     if verbose:
+        print("verbose")
         print(f"Connecting to master_addr: {master_addr}")
 
     # There is a race condition when initializing NCCL with a large number of ranks (e.g 500 ranks)
