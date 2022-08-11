@@ -75,7 +75,7 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
 
     # Pin this rank to a specific GPU on the node
     local_rank = mpi_rank % 8
-    if true:
+    #if true:
         #torch.cuda.set_device(local_rank)
 
     if verbose:
