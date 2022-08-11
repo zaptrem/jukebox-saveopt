@@ -4,6 +4,8 @@ import numpy as np
 import torch as t
 import torch.nn as nn
 import torch.nn.functional as F
+import torch_xla
+import torch_xla.core.xla_model as xm
 from jukebox.transformer.ops import Conv1D
 from jukebox.utils.checkpoint import checkpoint
 
@@ -384,7 +386,7 @@ class FactoredAttention(nn.Module):
         blocks = self.blocks or 1
         spread = self.spread or 1
         bs, l, d = (4, self.n_ctx, self.n_in)
-        x = t.randn(bs, l, d).cuda()
+        x = t.randn(bs, l, d).to(xm.xla_device())
         x.requires_grad = True
         x_out = self.forward(x) # bs, l, d
         loss = x_out.mean(dim = -1) # bs, l
@@ -425,7 +427,7 @@ class FactoredAttention(nn.Module):
         t.manual_seed(42)
         bs, l, d = (4, self.n_ctx, self.n_in)
         prime = 5
-        x = t.randn(bs, l, d).cuda()
+        x = t.randn(bs, l, d).to(xm.xla_device())
         xs = t.chunk(x, l, dim=1)
         assert self.sample_t == 0
         assert self.cache == {}
@@ -434,7 +436,7 @@ class FactoredAttention(nn.Module):
             enc_l = self.encoder_dims
             encoder_kv = None
             if self.attn_func == 6:
-                encoder_kv = t.randn(bs, enc_l, d).cuda()
+                encoder_kv = t.randn(bs, enc_l, d).to(xm.xla_device())
 
             # Normal path
             x_out_normal = self.forward(x, encoder_kv=encoder_kv)
@@ -462,9 +464,9 @@ class FactoredAttention(nn.Module):
         n_chunks = l // chunk_size
         with t.no_grad():
             encoder_kv = None
-            x = t.randn(bs, l, d).cuda()
+            x = t.randn(bs, l, d).to(xm.xla_device())
             if self.attn_func == 6:
-                encoder_kv = t.randn(bs, enc_l, d).cuda()
+                encoder_kv = t.randn(bs, enc_l, d).to(xm.xla_device())
 
             self.del_cache()
             y_forw = self.forward(x, encoder_kv=encoder_kv, sample=False)

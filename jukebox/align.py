@@ -5,6 +5,8 @@ Get alignment from attn values
 """
 import numpy as np
 import torch as t
+import torch_xla
+import torch_xla.core.xla_model as xm
 from jukebox.utils.torch_utils import assert_shape, empty_cache
 from jukebox.hparams import Hyperparams
 from jukebox.make_models import make_model
@@ -31,7 +33,7 @@ def get_alignment(x, zs, labels, prior, fp16, hps):
     alignment_hops = {}
     indices_hops = {}
 
-    prior.cuda()
+    prior.to(xm.xla_device())
     empty_cache()
     for start in get_starts(total_length, n_ctx, hop_length):
         end = start + n_ctx

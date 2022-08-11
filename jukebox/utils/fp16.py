@@ -6,6 +6,8 @@ import torch
 import jukebox.utils.dist_adapter as dist
 from torch.optim import Optimizer
 from torch._utils import _flatten_dense_tensors
+import torch_xla
+import torch_xla.core.xla_model as xm
 
 from jukebox.utils.dist_utils import allreduce
 

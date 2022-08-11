@@ -1,6 +1,8 @@
 import numpy as np
 import torch as t
 import torch.nn as nn
+import torch_xla
+import torch_xla.core.xla_model as xm
 
 from jukebox.vqvae.encdec import Encoder, Decoder, assert_shape
 from jukebox.vqvae.bottleneck import NoBottleneck, Bottleneck
@@ -125,7 +127,7 @@ class VQVAE(nn.Module):
             zi_chunks = [t.chunk(z, length_chunks, dim=1) for z in zs_i]
             xi_outs = []
             for i2 in range(length_chunks):
-                zs_i = [z_chunk[i2].cuda() for z_chunk in zi_chunks]
+                zs_i = [z_chunk[i2].to(xm.xla_device()) for z_chunk in zi_chunks]
                 xi_out = self._decode(zs_i, start_level=start_level, end_level=end_level)
                 xi_outs.append(xi_out.cpu())
             x_outs.append(t.cat(xi_outs, dim=1))
@@ -156,7 +158,7 @@ class VQVAE(nn.Module):
             xi_chunks = t.split(x_i, length_chunks, dim=1)
             zsi_list = []
             for x_i2 in xi_chunks:
-                zs_i2 = self._encode(x_i2.cuda(), start_level=start_level, end_level=end_level)
+                zs_i2 = self._encode(x_i2.to(xm.xla_device()), start_level=start_level, end_level=end_level)
                 zs_i2 = [z_i.cpu() for z_i in zs_i2]
                 zsi_list.append(zs_i2)
             zs_list.append([t.cat(zs_level_list, dim=1) for zs_level_list in zip(*zsi_list)])
@@ -164,7 +166,7 @@ class VQVAE(nn.Module):
         return zs
 
     def sample(self, n_samples):
-        zs = [t.randint(0, self.l_bins, size=(n_samples, *z_shape), device='cuda') for z_shape in self.z_shapes]
+        zs = [t.randint(0, self.l_bins, size=(n_samples, *z_shape), device=xm.xla_device()) for z_shape in self.z_shapes]
         return self.decode(zs)
 
     def forward(self, x, hps, loss_fn='l1'):

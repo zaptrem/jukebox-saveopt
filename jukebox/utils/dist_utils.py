@@ -1,6 +1,8 @@
 import os
 from time import sleep
 import torch
+import torch_xla
+import torch_xla.core.xla_model as xm
 import jukebox.utils.dist_adapter as dist
 
 def print_once(msg):
@@ -20,19 +22,19 @@ def allgather(x):
     return xs
 
 def allreduce(x, op=dist.ReduceOp.SUM):
-    x = torch.tensor(x).float().cuda()
+    x = torch.tensor(x).float().to(xm.xla_device())
     dist.all_reduce(x, op=op)
     return x.item()
 
 def allgather_lists(xs):
     bs = len(xs)
     total_bs = dist.get_world_size()*len(xs)
-    lengths = torch.tensor([len(x) for x in xs], dtype=t.long, device='cuda')
+    lengths = torch.tensor([len(x) for x in xs], dtype=t.long, device=xm.xla_device())
     lengths = allgather(lengths)
     assert lengths.shape == (total_bs,)
     max_length = torch.max(lengths).item()
 
-    xs = torch.tensor([[*x, *[0]*(max_length - len(x))] for x in xs], device='cuda')
+    xs = torch.tensor([[*x, *[0]*(max_length - len(x))] for x in xs], device=xm.xla_device())
     assert xs.shape == (bs, max_length), f'Expected {(bs, max_length)}, got {xs.shape}'
     xs = allgather(xs)
     assert xs.shape == (total_bs,max_length), f'Expected {(total_bs, max_length)}, got {xs.shape}'
@@ -45,14 +47,14 @@ def setup_dist_from_mpi(
     if dist.is_available():
         return _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose)
     else:
-        use_cuda = torch.cuda.is_available()
-        print(f'Using cuda {use_cuda}')
+        use_xla = true
+        print(f'Using xla {use_xla}')
 
         mpi_rank = 0
         local_rank = 0
 
-        device = torch.device("cuda", local_rank) if use_cuda else torch.device("cpu")
-        torch.cuda.set_device(local_rank)
+        device = torch.device(xm.xla_device(), local_rank) if use_xla else torch.device("cpu")
+        #torch.cuda.set_device(local_rank)
 
         return mpi_rank, local_rank, device
 
@@ -73,8 +75,8 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
 
     # Pin this rank to a specific GPU on the node
     local_rank = mpi_rank % 8
-    if torch.cuda.is_available():
-        torch.cuda.set_device(local_rank)
+    if true:
+        #torch.cuda.set_device(local_rank)
 
     if verbose:
         print(f"Connecting to master_addr: {master_addr}")
@@ -86,11 +88,11 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
             dist.init_process_group(backend=backend, init_method=f"env://")
             assert dist.get_rank() == mpi_rank
 
-            use_cuda = torch.cuda.is_available()
-            print(f'Using cuda {use_cuda}')
+            use_xla = true
+            print(f'Using xla {use_xla}')
             local_rank = mpi_rank % 8
-            device = torch.device("cuda", local_rank) if use_cuda else torch.device("cpu")
-            torch.cuda.set_device(local_rank)
+            device = torch.device(xm.xla_device(), local_rank) if use_xla else torch.device("cpu")
+            #torch.cuda.set_device(local_rank)
 
             return mpi_rank, local_rank, device
         except RuntimeError as e:

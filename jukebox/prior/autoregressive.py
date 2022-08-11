@@ -2,6 +2,8 @@ import numpy as np
 import torch as t
 import torch.nn as nn
 import torch.nn.functional as F
+import torch_xla
+import torch_xla.core.xla_model as xm
 
 from jukebox.transformer.ops import filter_logits
 from jukebox.transformer.transformer import Transformer
@@ -59,7 +61,7 @@ class ConditionalAutoregressive2D(nn.Module):
                  m_attn=0.25, m_mlp=1,
                  checkpoint_res=0, checkpoint_attn=0, checkpoint_mlp=0,
                  attn_order=0, blocks=None, spread=None, x_cond=False, y_cond=False,
-                 encoder_dims=0, only_encode=False, merged_decoder=False, prime_len=None, device='cuda'):
+                 encoder_dims=0, only_encode=False, merged_decoder=False, prime_len=None, device=xm.xla_device()):
         super().__init__()
         self.input_shape = input_shape
         self.input_dims = input_dims = np.prod(input_shape)
@@ -126,7 +128,7 @@ class ConditionalAutoregressive2D(nn.Module):
             x = self.preprocess(x)
 
         N, D = x.shape
-        assert isinstance(x, t.cuda.LongTensor)
+        assert isinstance(x, t.LongTensor)
         assert (0 <= x).all() and (x < self.bins).all()
 
         if self.y_cond:
@@ -184,13 +186,13 @@ class ConditionalAutoregressive2D(nn.Module):
         N, D = n_samples, self.input_dims
         if sample_t == 0:
             # Fill in start token
-            x = t.empty(n_samples, 1, self.width).cuda()
+            x = t.empty(n_samples, 1, self.width).to(xm.xla_device())
             if self.y_cond:
                 x[:, 0] = y_cond.view(N, self.width)
             else:
                 x[:, 0] = self.start_token
         else:
-            assert isinstance(x, t.cuda.LongTensor)
+            assert isinstance(x, t.LongTensor)
             assert (0 <= x).all() and (x < self.bins).all()
             x = self.x_emb(x)
         assert x.shape == (n_samples, 1, self.width)
@@ -219,7 +221,7 @@ class ConditionalAutoregressive2D(nn.Module):
             assert x_cond.shape == (N, D, self.width) or x_cond.shape == (N, 1, self.width), f"Got {x_cond.shape}, expected ({N}, {D}/{1}, {self.width})"
         else:
             assert x_cond is None
-            x_cond = t.zeros((N, 1, self.width), dtype=t.float).cuda()
+            x_cond = t.zeros((N, 1, self.width), dtype=t.float).to(xm.xla_device())
 
         with t.no_grad():
             xs, x = [], None
@@ -262,7 +264,7 @@ class ConditionalAutoregressive2D(nn.Module):
         # Preprocess.
         with t.no_grad():
             x = self.preprocess(x)
-        assert isinstance(x, t.cuda.LongTensor)
+        assert isinstance(x, t.LongTensor)
         assert (0 <= x).all() and (x < self.bins).all()
         assert x.shape[0] == n_samples
         xs = t.split(x, 1, dim=1)
@@ -281,7 +283,7 @@ class ConditionalAutoregressive2D(nn.Module):
             assert x_cond.shape == (N, D, self.width) or x_cond.shape == (N, 1, self.width), f"Got {x_cond.shape}, expected ({N}, {D}/{1}, {self.width})"
         else:
             assert x_cond is None
-            x_cond = t.zeros((N, 1, self.width), dtype=t.float).cuda()
+            x_cond = t.zeros((N, 1, self.width), dtype=t.float).to(xm.xla_device())
 
         with t.no_grad():
             if get_preds:
@@ -369,9 +371,9 @@ class ConditionalAutoregressive2D(nn.Module):
         prime = int(self.input_dims//8*7)
         enc_l = self.encoder_dims
         with t.no_grad():
-            y_cond = t.randn(bs, 1, d).cuda() if self.y_cond else None
-            x_cond = t.randn(bs, l, d).cuda() if self.x_cond else None
-            encoder_kv = t.randn(bs, enc_l, d).cuda()
+            y_cond = t.randn(bs, 1, d).to(xm.xla_device()) if self.y_cond else None
+            x_cond = t.randn(bs, l, d).to(xm.xla_device()) if self.x_cond else None
+            encoder_kv = t.randn(bs, enc_l, d).to(xm.xla_device())
 
             x, preds_sample = self.sample(bs, x_cond, y_cond, encoder_kv, get_preds=True)
             loss, preds_forw = self.forward(x, x_cond, y_cond, encoder_kv, get_preds=True)
@@ -406,7 +408,7 @@ def test_prior(input_shape, encoder_dims, blocks, heads, chunk_size):
                                                     width=width, depth=depth, heads=heads,
                                                     attn_order=attn_order, blocks=blocks,
                                                     x_cond=x_cond, y_cond=y_cond,
-                                                    encoder_dims=encoder_dims, prime_len=prime_len).cuda()
+                                                    encoder_dims=encoder_dims, prime_len=prime_len).to(xm.xla_device())
                 prior.training = False
                 prior.check_sample(chunk_size)
                 print(f"Checked x_cond: {x_cond}, y_cond: {y_cond}, attn_order: {attn_order}")
