@@ -144,6 +144,8 @@ class Transformer(nn.Module):
         self.checkpoint_res = checkpoint_res
         self._attn_mods = nn.ModuleList()
         for d in range(n_depth):
+            print("transf init TPU Memory Info: ")
+            print(xm.get_memory_info(device))
             dev = device
             attn_b = attn_block(d).to(dev)
             attn_b._dev = dev
@@ -153,6 +155,8 @@ class Transformer(nn.Module):
     def c_to(self, device):
         self.device = device
         for d in range(len(self._attn_mods)):
+            print("transf c_to TPU Memory Info: ")
+            print(xm.get_memory_info(device))
             dev = device
             attn_b = self._attn_mods[d].to(dev)
             attn_b._dev = dev
