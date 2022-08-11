@@ -77,6 +77,7 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
     local_rank = mpi_rank % 8
     #if true:
         #torch.cuda.set_device(local_rank)
+        
 
     if verbose:
         print("verbose")
