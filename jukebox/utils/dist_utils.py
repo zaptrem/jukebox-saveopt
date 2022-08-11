@@ -47,7 +47,7 @@ def setup_dist_from_mpi(
     if dist.is_available():
         return _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose)
     else:
-        use_xla = true
+        use_xla = True
         print(f'Using xla {use_xla}')
 
         mpi_rank = 0
@@ -90,7 +90,7 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
             dist.init_process_group(backend=backend, init_method=f"env://")
             assert dist.get_rank() == mpi_rank
 
-            use_xla = true
+            use_xla = True
             print(f'Using xla {use_xla}')
             local_rank = mpi_rank % 8
             device = torch.device(xm.xla_device(), local_rank) if use_xla else torch.device("cpu")
