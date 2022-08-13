@@ -1,6 +1,4 @@
 import torch as t
-import torch_xla
-import torch_xla.core.xla_model as xm
 import jukebox.utils.dist_adapter as dist
 from tqdm import tqdm
 from datetime import date
@@ -89,8 +87,8 @@ class Metrics:
     def update(self, tag, val, batch):
         # v is average value over batch
         # store total value and total batch, returns dist average
-        sum = t.tensor(val * batch).float().to(xm.xla_device())
-        n = t.tensor(batch).float().to(xm.xla_device())
+        sum = t.tensor(val * batch).float().to(t.device("mps"))
+        n = t.tensor(batch).float().to(t.device("mps"))
         dist.all_reduce(sum)
         dist.all_reduce(n)
         sum = sum.item()

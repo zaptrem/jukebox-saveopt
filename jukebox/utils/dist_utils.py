@@ -1,8 +1,6 @@
 import os
 from time import sleep
 import torch
-import torch_xla
-import torch_xla.core.xla_model as xm
 import jukebox.utils.dist_adapter as dist
 
 def print_once(msg):
@@ -22,19 +20,19 @@ def allgather(x):
     return xs
 
 def allreduce(x, op=dist.ReduceOp.SUM):
-    x = torch.tensor(x).float().to(xm.xla_device())
+    x = torch.tensor(x).float().to(torch.device("mps"))
     dist.all_reduce(x, op=op)
     return x.item()
 
 def allgather_lists(xs):
     bs = len(xs)
     total_bs = dist.get_world_size()*len(xs)
-    lengths = torch.tensor([len(x) for x in xs], dtype=t.long, device=xm.xla_device())
+    lengths = torch.tensor([len(x) for x in xs], dtype=t.long, device=torch.device("mps"))
     lengths = allgather(lengths)
     assert lengths.shape == (total_bs,)
     max_length = torch.max(lengths).item()
 
-    xs = torch.tensor([[*x, *[0]*(max_length - len(x))] for x in xs], device=xm.xla_device())
+    xs = torch.tensor([[*x, *[0]*(max_length - len(x))] for x in xs], device=torch.device("mps"))
     assert xs.shape == (bs, max_length), f'Expected {(bs, max_length)}, got {xs.shape}'
     xs = allgather(xs)
     assert xs.shape == (total_bs,max_length), f'Expected {(total_bs, max_length)}, got {xs.shape}'
@@ -47,13 +45,13 @@ def setup_dist_from_mpi(
     if dist.is_available():
         return _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose)
     else:
-        use_xla = True
-        print(f'Using xla {use_xla}')
+        use_mps = True
+        print(f'Using mps {use_mps}')
 
         mpi_rank = 0
         local_rank = 0
 
-        device = xm.xla_device()
+        device = torch.device("mps")
         #torch.cuda.set_device(local_rank)
 
         return mpi_rank, local_rank, device
@@ -87,13 +85,18 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
     # We guard against the failure and then retry
     for attempt_idx in range(n_attempts):
         try:
-            dist.init_process_group(backend=backend, init_method=f"env://")
+            print("maybe initialize dist")
+            if (not dist.is_initialized()):
+                print("dist not initialized, doing that now")
+                dist.init_process_group(backend=backend, init_method=f"env://")
+            else:
+                print("dist already initialized")
             assert dist.get_rank() == mpi_rank
 
-            use_xla = True
-            print(f'Using xla {use_xla}')
+            use_mps = True
+            print(f'Using mps {use_mps}')
             local_rank = mpi_rank % 8
-            device = xm.xla_device() # TODO: Fix multi-TPU training
+            device = torch.device("mps") # TODO: Fix multi-TPU training
             #torch.cuda.set_device(local_rank)
 
             return mpi_rank, local_rank, device

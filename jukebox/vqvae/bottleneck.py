@@ -2,8 +2,6 @@ import numpy as np
 import torch as t
 import torch.nn as nn
 import torch.nn.functional as F
-import torch_xla
-import torch_xla.core.xla_model as xm
 import jukebox.utils.dist_adapter as dist
 
 class BottleneckBlock(nn.Module):
@@ -19,7 +17,7 @@ class BottleneckBlock(nn.Module):
         self.init = False
         self.k_sum = None
         self.k_elem = None
-        self.register_buffer('k', t.zeros(self.k_bins, self.emb_width).to(xm.xla_device()))
+        self.register_buffer('k', t.zeros(self.k_bins, self.emb_width).to(t.device("mps")))
 
     def _tile(self, x):
         d, ew = x.shape
@@ -238,7 +236,7 @@ class NoBottleneck(nn.Module):
         return zs
 
     def forward(self, xs):
-        zero = t.zeros(()).to(xm.xla_device())
+        zero = t.zeros(()).to(t.device("mps"))
         commit_losses = [zero for _ in range(self.levels)]
         metrics = [dict(entropy=zero, usage=zero, used_curr=zero, pn=zero, dk=zero) for _ in range(self.levels)]
         return xs, xs, commit_losses, metrics

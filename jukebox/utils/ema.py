@@ -1,7 +1,5 @@
 import torch
 from torch._utils import _flatten_dense_tensors
-import torch_xla
-import torch_xla.core.xla_model as xm
 import numpy as np
 
 # EMA always in float, as accumulation needs lots of bits
@@ -43,7 +41,7 @@ class CPUEMA:
             if self.steps % self.freq == 0:
                 for i in range(len(self.state)):
                     p, state = self.state[i]
-                    state = torch.from_numpy(state).to(xm.xla_device())
+                    state = torch.from_numpy(state).to(t.device("mps"))
                     state.mul_(self.mu).add_(1 - self.mu, p.data.float())
                     self.state[i] = (p, state.cpu().numpy())
 

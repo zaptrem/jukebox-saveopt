@@ -4,8 +4,6 @@ write gpu and (gpu) memory usage of nvidia cards as scalar
 from tensorboardX import SummaryWriter
 import time
 import torch
-import torch_xla
-import torch_xla.core.xla_model as xm
 try:
     import nvidia_smi
     nvidia_smi.nvmlInit()
@@ -18,7 +16,7 @@ except ImportError:
 with SummaryWriter() as writer:
     x = []
     for n_iter in range(50):
-        x.append(torch.Tensor(1000, 1000).to(xm.xla_device()))
+        x.append(torch.Tensor(1000, 1000).to(torch.device("mps")))
         res = nvidia_smi.nvmlDeviceGetUtilizationRates(handle)
         writer.add_scalar('nv/gpu', res.gpu, n_iter)
         res = nvidia_smi.nvmlDeviceGetMemoryInfo(handle)

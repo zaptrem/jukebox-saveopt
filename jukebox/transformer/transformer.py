@@ -3,8 +3,6 @@ import numpy as np
 import torch as t
 import torch.nn as nn
 import jukebox.utils.dist_adapter as dist
-import torch_xla
-import torch_xla.core.xla_model as xm
 
 from jukebox.transformer.ops import Conv1D, ACT_FNS, LayerNorm
 from jukebox.transformer.factored_attention import FactoredAttention
@@ -14,11 +12,11 @@ free_memory_limit = 4_000_000_000
 
 def _convert_mlp_traced(l):
     if isinstance(l, ResAttnBlock):
-        l.mlp = t.jit.trace(l.mlp, t.randn(1, 1, l.n_in).to(xm.xla_device()))
+        l.mlp = t.jit.trace(l.mlp, t.randn(1, 1, l.n_in).to(t.device("mps")))
 
 def _convert_mlp_traced_fp16(l):
     if isinstance(l, ResAttnBlock):
-        l.mlp = t.jit.trace(l.mlp, t.randn(1, 1, l.n_in).to(xm.xla_device()).half())
+        l.mlp = t.jit.trace(l.mlp, t.randn(1, 1, l.n_in).to(t.device("mps")).half())
 
 class MLP(nn.Module):
     def __init__(self, n_in, n_state, resid_dropout=0.0, afn='quick_gelu', zero_out=False, init_scale=1.0):
@@ -97,7 +95,7 @@ class Transformer(nn.Module):
                  m_attn=0.25, m_mlp=1.,
                  checkpoint_attn=0, checkpoint_mlp=0, checkpoint_res=0,
                  attn_order=0, blocks=None, spread=None,
-                 encoder_dims=None, prime_len=None, device=xm.xla_device()):
+                 encoder_dims=None, prime_len=None, device=t.device("mps")):
         super().__init__()
         self.n_in = n_in
         self.n_ctx = n_ctx
@@ -144,8 +142,7 @@ class Transformer(nn.Module):
         self.checkpoint_res = checkpoint_res
         self._attn_mods = nn.ModuleList()
         for d in range(n_depth):
-            print("transf init TPU Memory Info: ")
-            print(xm.get_memory_info(device))
+            # Loading
             dev = device
             attn_b = attn_block(d).to(dev)
             attn_b._dev = dev
@@ -155,8 +152,7 @@ class Transformer(nn.Module):
     def c_to(self, device):
         self.device = device
         for d in range(len(self._attn_mods)):
-            print("transf c_to TPU Memory Info: ")
-            print(xm.get_memory_info(device))
+            # Loading
             dev = device
             attn_b = self._attn_mods[d].to(dev)
             attn_b._dev = dev
@@ -226,8 +222,8 @@ class Transformer(nn.Module):
         bs, l, s, d = (4, self.n_ctx, self.encoder_dims, self.n_in)
         prime = 5
         with t.no_grad():
-            encoder_kv = t.randn(bs, s, d).to(xm.xla_device())
-            x = t.randn(bs, l, d).to(xm.xla_device())
+            encoder_kv = t.randn(bs, s, d).to(t.device("mps"))
+            x = t.randn(bs, l, d).to(t.device("mps"))
             y_forw = self.forward(x, encoder_kv=encoder_kv, sample=True)
 
             self.del_cache()
@@ -256,7 +252,7 @@ if __name__ == '__main__':
     blocks = 16
     for attn_order in [0,2,6]:
         encoder_dims = {0: 0, 2: 0, 6: 64}[attn_order]
-        prior = Transformer(n_in, n_ctx, n_head, n_depth, mask=True, attn_order=attn_order, encoder_dims=encoder_dims, blocks=blocks).to(xm.xla_device())
+        prior = Transformer(n_in, n_ctx, n_head, n_depth, mask=True, attn_order=attn_order, encoder_dims=encoder_dims, blocks=blocks).to(t.device("mps"))
         prior.training = False
         prior.check_sample()
         print(f"Checked attn_order: {attn_order}")

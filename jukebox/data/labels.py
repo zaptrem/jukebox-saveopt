@@ -1,6 +1,4 @@
 import torch as t
-import torch_xla
-import torch_xla.core.xla_model as xm
 import numpy as np
 from jukebox.data.artist_genre_processor import ArtistGenreProcessor
 from jukebox.data.text_processor import TextProcessor
@@ -101,7 +99,7 @@ class Labeller():
                 tokens, indices = get_relevant_lyric_tokens(full_tokens, self.n_tokens, total_length, offset, duration)
                 tokens_list.append(tokens)
                 indices_list.append(indices)
-            ys[:, -self.n_tokens:] = t.tensor(tokens_list, dtype=t.long, device=xm.xla_device())
+            ys[:, -self.n_tokens:] = t.tensor(tokens_list, dtype=t.long, device=t.device("mps"))
             return indices_list
         else:
             return None
