@@ -175,6 +175,7 @@ class SimplePrior(nn.Module):
         for i in range(len(xs)):
             x, shape, dims = xs[i], self.prior_shapes[i], self.prior_dims[i]
             bins, bins_shift = int(self.prior_bins[i]), int(self.prior_bins_shift[i])
+            x = x.to("mps").type(t.LongTensor)
             assert isinstance(x, t.LongTensor), x
             assert (0 <= x).all() and (x < bins).all()
             #assert_shape(x, (N, *shape))
