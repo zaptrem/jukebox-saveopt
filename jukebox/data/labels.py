@@ -25,7 +25,7 @@ class EmptyLabeller():
         info = dict(artist="n/a", genre="n/a", lyrics=[], full_tokens=[])
         return dict(y=y, info=info)
 
-    def get_batch_labels(self, metas, device='mps'):
+    def get_batch_labels(self, metas, device='cpu'):
         ys, infos = [], []
         for meta in metas:
             label = self.get_label()
@@ -73,7 +73,7 @@ class Labeller():
         assert y.shape == self.label_shape, f"Expected {self.label_shape}, got {y.shape}"
         return y
 
-    def get_batch_labels(self, metas, device='mps'):
+    def get_batch_labels(self, metas, device='cpu'):
         ys, infos = [], []
         for meta in metas:
             label = self.get_label(**meta)
@@ -99,7 +99,7 @@ class Labeller():
                 tokens, indices = get_relevant_lyric_tokens(full_tokens, self.n_tokens, total_length, offset, duration)
                 tokens_list.append(tokens)
                 indices_list.append(indices)
-            ys[:, -self.n_tokens:] = t.tensor(tokens_list, dtype=t.long, device=t.device("mps"))
+            ys[:, -self.n_tokens:] = t.tensor(tokens_list, dtype=t.long, device='cuda')
             return indices_list
         else:
             return None

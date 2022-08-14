@@ -15,7 +15,7 @@ import torch.distributed as dist
 if False: # False for windows
 	rank, local_rank, device = setup_dist_from_mpi()
 else:
-	rank, local_rank, device = (0, 0, t.device("mps") if True else t.device('cpu'))
+	rank, local_rank, device = (0, 0, t.device('cuda') if t.cuda.is_available() else t.device('cpu'))
 	print(device)
 	os.environ["MASTER_ADDR"] = "localhost"
 	os.environ["MASTER_PORT"] = "29500"
@@ -81,7 +81,7 @@ if False:
     # upsample from saved lv1
     zs = t.load(f'{hps.name}/level_1/data.pth.tar')['zs']
     upsamplers = [make_prior(setup_hparams(priors[0], dict(restore_prior=f'models/5b/prior_level_0.pth.tar')), vqvae, 'cpu'), None]
-    labels[:2] = [upsamplers[0].labeller.get_batch_labels(metas, t.device("mps")) for i in range(2)]
+    labels[:2] = [upsamplers[0].labeller.get_batch_labels(metas, 'cuda') for i in range(2)]
     labels[2] = labels[1]
     zs = _sample(zs, labels, sampling_kwargs, [*upsamplers, top_prior], [0], hps)
 else:
@@ -96,6 +96,6 @@ else:
     print(zs[2].shape)
     print('done')
     upsamplers = [make_prior(setup_hparams(prior, dict(restore_prior=f'models/5b/prior_level_{level}.pth.tar')), vqvae, 'cpu') for level, prior in enumerate(priors[:-1])]
-    labels[:2] = [prior.labeller.get_batch_labels(metas, t.device("mps")) for prior in upsamplers]
+    labels[:2] = [prior.labeller.get_batch_labels(metas, 'cuda') for prior in upsamplers]
     labels[2] = labels[1]
     zs = upsample(zs, labels, sampling_kwargs, [*upsamplers, top_prior], hps)

@@ -20,19 +20,19 @@ def allgather(x):
     return xs
 
 def allreduce(x, op=dist.ReduceOp.SUM):
-    x = torch.tensor(x).float().to(torch.device("mps"))
+    x = torch.tensor(x).float().cuda()
     dist.all_reduce(x, op=op)
     return x.item()
 
 def allgather_lists(xs):
     bs = len(xs)
     total_bs = dist.get_world_size()*len(xs)
-    lengths = torch.tensor([len(x) for x in xs], dtype=t.long, device=torch.device("mps"))
+    lengths = torch.tensor([len(x) for x in xs], dtype=t.long, device='cuda')
     lengths = allgather(lengths)
     assert lengths.shape == (total_bs,)
     max_length = torch.max(lengths).item()
 
-    xs = torch.tensor([[*x, *[0]*(max_length - len(x))] for x in xs], device=torch.device("mps"))
+    xs = torch.tensor([[*x, *[0]*(max_length - len(x))] for x in xs], device='cuda')
     assert xs.shape == (bs, max_length), f'Expected {(bs, max_length)}, got {xs.shape}'
     xs = allgather(xs)
     assert xs.shape == (total_bs,max_length), f'Expected {(total_bs, max_length)}, got {xs.shape}'
@@ -40,19 +40,19 @@ def allgather_lists(xs):
     return [xs[i][:lengths[i]].cpu().numpy().tolist() for i in range(total_bs)]
 
 def setup_dist_from_mpi(
-    master_addr="127.0.0.1", backend="gloo", port=29500, n_attempts=5, verbose=False
+    master_addr="127.0.0.1", backend="nccl", port=29500, n_attempts=5, verbose=False
 ):
     if dist.is_available():
         return _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose)
     else:
-        use_mps = True
-        print(f'Using mps {use_mps}')
+        use_cuda = torch.cuda.is_available()
+        print(f'Using cuda {use_cuda}')
 
         mpi_rank = 0
         local_rank = 0
 
-        device = torch.device("mps")
-        #torch.cuda.set_device(local_rank)
+        device = torch.device("cuda", local_rank) if use_cuda else torch.device("cpu")
+        torch.cuda.set_device(local_rank)
 
         return mpi_rank, local_rank, device
 
@@ -73,31 +73,24 @@ def _setup_dist_from_mpi(master_addr, backend, port, n_attempts, verbose):
 
     # Pin this rank to a specific GPU on the node
     local_rank = mpi_rank % 8
-    #if true:
-        #torch.cuda.set_device(local_rank)
-
+    if torch.cuda.is_available():
+        torch.cuda.set_device(local_rank)
 
     if verbose:
-        print("verbose")
         print(f"Connecting to master_addr: {master_addr}")
 
     # There is a race condition when initializing NCCL with a large number of ranks (e.g 500 ranks)
     # We guard against the failure and then retry
     for attempt_idx in range(n_attempts):
         try:
-            print("maybe initialize dist")
-            if (not dist.is_initialized()):
-                print("dist not initialized, doing that now")
-                dist.init_process_group(backend=backend, init_method=f"env://")
-            else:
-                print("dist already initialized")
+            dist.init_process_group(backend=backend, init_method=f"env://")
             assert dist.get_rank() == mpi_rank
 
-            use_mps = True
-            print(f'Using mps {use_mps}')
+            use_cuda = torch.cuda.is_available()
+            print(f'Using cuda {use_cuda}')
             local_rank = mpi_rank % 8
-            device = torch.device("mps") # TODO: Fix multi-TPU training
-            #torch.cuda.set_device(local_rank)
+            device = torch.device("cuda", local_rank) if use_cuda else torch.device("cpu")
+            torch.cuda.set_device(local_rank)
 
             return mpi_rank, local_rank, device
         except RuntimeError as e:

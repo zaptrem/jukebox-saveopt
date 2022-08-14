@@ -70,14 +70,14 @@ def test_simple_loader():
     def load(file, loader):
         batch = get_batch(file, loader)  # np
         x = collate_fn(batch)  # torch cpu
-        x = x.to(t.device("mps"), non_blocking=True)  # torch gpu
+        x = x.to('cuda', non_blocking=True)  # torch gpu
         return x
 
     files = librosa.util.find_files('/root/data/', ['mp3', 'm4a', 'opus'])
     print(files[:10])
     loader = load_audio
     print("Loader", loader.__name__)
-    x = t.randn(2, 2).to(t.device("mps"))
+    x = t.randn(2, 2).cuda()
     x = load(files[0], loader)
     for i,file in enumerate(tqdm(files)):
         x = load(file, loader)
@@ -117,7 +117,7 @@ def test_dataset_loader():
     dist.barrier()
     sampler.set_epoch(0)
     for i, x in enumerate(tqdm(train_loader)):
-        x = x.to(t.device("mps"), non_blocking=True)
+        x = x.to('cuda', non_blocking=True)
         for j, aud in enumerate(x):
             writer.add_audio('in_' + str(i*hps.bs + j), aud, 1, hps.sr)
         print("Wrote in")

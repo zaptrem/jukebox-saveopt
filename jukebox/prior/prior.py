@@ -34,7 +34,7 @@ class SimplePrior(nn.Module):
     def __init__(self, z_shapes, l_bins, encoder, decoder, level,
                  downs_t, strides_t, labels, prior_kwargs, x_cond_kwargs, y_cond_kwargs,
                  prime_kwargs, copy_input, labels_v3=False,
-                 merged_decoder=False, single_enc_dec=False, device=t.device("mps")):
+                 merged_decoder=False, single_enc_dec=False, device='cuda'):
         super().__init__()
 
         self.use_tokens = prime_kwargs.pop('use_tokens')
@@ -175,8 +175,7 @@ class SimplePrior(nn.Module):
         for i in range(len(xs)):
             x, shape, dims = xs[i], self.prior_shapes[i], self.prior_dims[i]
             bins, bins_shift = int(self.prior_bins[i]), int(self.prior_bins_shift[i])
-            x = x.to("mps").type(t.LongTensor)
-            assert isinstance(x, t.LongTensor), x
+            assert isinstance(x, t.cuda.LongTensor), x
             assert (0 <= x).all() and (x < bins).all()
             #assert_shape(x, (N, *shape))
             xs[i] = (xs[i] + bins_shift).view(N, -1)
@@ -186,7 +185,7 @@ class SimplePrior(nn.Module):
             if cond is not None:
                 assert_shape(cond, (N, dims, self.prior_width))
             else:
-                conds[i] = t.zeros((N, dims, self.prior_width), dtype=t.float, device=t.device("mps"))
+                conds[i] = t.zeros((N, dims, self.prior_width), dtype=t.float, device='cuda')
 
         return t.cat(xs, dim=1), t.cat(conds, dim=1)
 
@@ -291,7 +290,7 @@ class SimplePrior(nn.Module):
     def get_encoder_kv(self, prime, fp16=False, sample=False):
         if self.n_tokens != 0 and self.use_tokens:
             if sample:
-                self.prime_prior.to(t.device("mps"))
+                self.prime_prior.cuda()
             N = prime.shape[0]
             prime_acts = self.prime_prior(prime, None, None, None, fp16=fp16)
             assert_shape(prime_acts, (N, self.prime_loss_dims, self.prime_acts_width))
@@ -312,7 +311,7 @@ class SimplePrior(nn.Module):
             encoder_kv = self.prime_x_out(encoder_kv)
             prime_loss = nn.functional.cross_entropy(encoder_kv.view(-1, self.prime_bins), prime_t.view(-1)) / np.log(2.)
         else:
-            prime_loss = t.tensor(0.0, device=t.device("mps"))
+            prime_loss = t.tensor(0.0, device='cuda')
         return prime_loss
 
     def z_forward(self, z, z_conds=[], y=None, fp16=False, get_preds=False, get_attn_weights=False):

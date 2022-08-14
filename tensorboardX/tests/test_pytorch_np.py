@@ -18,14 +18,14 @@ class PyTorchNumpyTest(unittest.TestCase):
 
             # CUDA tensor
             if torch.cuda.device_count() > 0:
-                assert isinstance(x2num.make_np(tensor.to(torch.device("mps"))), np.ndarray)
+                assert isinstance(x2num.make_np(tensor.cuda()), np.ndarray)
 
             # regular variable
             assert isinstance(x2num.make_np(torch.autograd.Variable(tensor)), np.ndarray)
 
             # CUDA variable
             if torch.cuda.device_count() > 0:
-                assert isinstance(x2num.make_np(torch.autograd.Variable(tensor).to(torch.device("mps"))), np.ndarray)
+                assert isinstance(x2num.make_np(torch.autograd.Variable(tensor).cuda()), np.ndarray)
 
         # python primitive type
         assert(isinstance(x2num.make_np(0), np.ndarray))

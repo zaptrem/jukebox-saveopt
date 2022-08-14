@@ -50,9 +50,9 @@ def sample_single_window(zs, labels, sampling_kwargs, level, prior, start, hps, 
     n_samples = hps.n_samples
     n_ctx = prior.n_ctx
     end = start + n_ctx
-    zs = [z.to('mps') for z in zs] # force tokens back onto ram if the notebook did an oopsie
+    zs = [z.to('cpu') for z in zs] # force tokens back onto ram if the notebook did an oopsie
     # get z already sampled at current level
-    z = zs[level][:,start:end].to(t.device("mps"))
+    z = zs[level][:,start:end].to('cuda')
 
     if 'sample_tokens' in sampling_kwargs:
         # Support sampling a window shorter than n_ctx
@@ -71,7 +71,7 @@ def sample_single_window(zs, labels, sampling_kwargs, level, prior, start, hps, 
     z_conds = prior.get_z_conds(zs, start, end)
     #print(z_conds)
     if z_conds:
-        z_conds = [cond.to(t.device("mps")) for cond in z_conds]
+        z_conds = [cond.cuda() for cond in z_conds]
     #print(z_conds)
 
     # set y offset, sample_length and lyrics tokens
@@ -89,7 +89,7 @@ def sample_single_window(zs, labels, sampling_kwargs, level, prior, start, hps, 
     z_samples = []
     for z_i, z_conds_i, y_i in zip(z_list, z_conds_list, y_list):
         z_samples_i = prior.sample(n_samples=z_i.shape[0], z=z_i, z_conds=z_conds_i, y=y_i, combined_progress=combined_progress, prob_func=prob_func, **sampling_kwargs)
-        z_samples.append(z_samples_i.to('mps'))
+        z_samples.append(z_samples_i.to('cpu'))
     z = t.cat(z_samples, dim=0)
 
     sampling_kwargs['max_batch_size'] = max_batch_size
@@ -174,7 +174,7 @@ def sample_level(zs, labels, sampling_kwargs, level, prior, total_length, hop_le
                     save_wav(logdir, x, hps.sr)
                     print('WAV written to disk')
                     del x
-                    print("would have emptied c u d a cache here")
+                    t.cuda.empty_cache()
                 cnt += 1
                 print()
         else:
@@ -189,7 +189,7 @@ def sample_level(zs, labels, sampling_kwargs, level, prior, total_length, hop_le
                     save_wav(logdir, x, hps.sr)
                     print('WAV written to disk')
                     del x
-                    print("would have emptied c u d a cache here")
+                    t.cuda.empty_cache()
                 cnt += 1
                 print()
     else:
@@ -197,7 +197,7 @@ def sample_level(zs, labels, sampling_kwargs, level, prior, total_length, hop_le
     return zs
 
 # Sample multiple levels
-def _sample(zs, labels, sampling_kwargs, priors, sample_levels, hps, device=t.device("mps")):
+def _sample(zs, labels, sampling_kwargs, priors, sample_levels, hps, device='cuda'):
     alignments = None
     for level in reversed(sample_levels):
         prior = priors[level]
@@ -242,7 +242,7 @@ def _sample(zs, labels, sampling_kwargs, priors, sample_levels, hps, device=t.de
 # Generate ancestral samples given a list of artists and genres
 def ancestral_sample(labels, sampling_kwargs, priors, hps):
     sample_levels = list(range(len(priors)))
-    zs = [t.zeros(hps.n_samples,0,dtype=t.long, device=t.device("mps")) for _ in range(len(priors))]
+    zs = [t.zeros(hps.n_samples,0,dtype=t.long, device='cuda') for _ in range(len(priors))]
     zs = _sample(zs, labels, sampling_kwargs, priors, sample_levels, hps)
     return zs
 
@@ -276,13 +276,13 @@ def load_prompts(audio_files, duration, hps):
         xs.extend(xs)
     xs = xs[:hps.n_samples]
     x = t.stack([t.from_numpy(x) for x in xs])
-    #x = x.to(t.device("mps"), non_blocking=True)
+    #x = x.to('cuda', non_blocking=True)
     return x
 
 # Load codes from previous sampling run
 def load_codes(codes_file, duration, priors, hps):
-    data = t.load(codes_file, map_location='mps')
-    zs = [z.to(t.device("mps")) for z in data['zs']]
+    data = t.load(codes_file, map_location='cpu')
+    zs = [z.cuda() for z in data['zs']]
     assert zs[-1].shape[0] == hps.n_samples, f"Expected bs = {hps.n_samples}, got {zs[-1].shape[0]}"
     del data
     if duration is not None:
@@ -343,7 +343,7 @@ def save_samples(model, device, hps, sample_hps):
         metas.extend(metas)
     metas = metas[:hps.n_samples]
 
-    labels = [prior.labeller.get_batch_labels(metas, t.device("mps")) for prior in priors]
+    labels = [prior.labeller.get_batch_labels(metas, 'cuda') for prior in priors]
     for label in labels:
         assert label['y'].shape[0] == hps.n_samples
 
