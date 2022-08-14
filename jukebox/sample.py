@@ -50,7 +50,7 @@ def sample_single_window(zs, labels, sampling_kwargs, level, prior, start, hps, 
     n_samples = hps.n_samples
     n_ctx = prior.n_ctx
     end = start + n_ctx
-    zs = [z.to('cpu') for z in zs] # force tokens back onto ram if the notebook did an oopsie
+    zs = [z.to('mps') for z in zs] # force tokens back onto ram if the notebook did an oopsie
     # get z already sampled at current level
     z = zs[level][:,start:end].to(t.device("mps"))
 
@@ -89,7 +89,7 @@ def sample_single_window(zs, labels, sampling_kwargs, level, prior, start, hps, 
     z_samples = []
     for z_i, z_conds_i, y_i in zip(z_list, z_conds_list, y_list):
         z_samples_i = prior.sample(n_samples=z_i.shape[0], z=z_i, z_conds=z_conds_i, y=y_i, combined_progress=combined_progress, prob_func=prob_func, **sampling_kwargs)
-        z_samples.append(z_samples_i.to('cpu'))
+        z_samples.append(z_samples_i.to('mps'))
     z = t.cat(z_samples, dim=0)
 
     sampling_kwargs['max_batch_size'] = max_batch_size
@@ -281,7 +281,7 @@ def load_prompts(audio_files, duration, hps):
 
 # Load codes from previous sampling run
 def load_codes(codes_file, duration, priors, hps):
-    data = t.load(codes_file, map_location='cpu')
+    data = t.load(codes_file, map_location='mps')
     zs = [z.to(t.device("mps")) for z in data['zs']]
     assert zs[-1].shape[0] == hps.n_samples, f"Expected bs = {hps.n_samples}, got {zs[-1].shape[0]}"
     del data

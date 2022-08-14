@@ -25,7 +25,7 @@ class EmptyLabeller():
         info = dict(artist="n/a", genre="n/a", lyrics=[], full_tokens=[])
         return dict(y=y, info=info)
 
-    def get_batch_labels(self, metas, device='cpu'):
+    def get_batch_labels(self, metas, device='mps'):
         ys, infos = [], []
         for meta in metas:
             label = self.get_label()
@@ -73,7 +73,7 @@ class Labeller():
         assert y.shape == self.label_shape, f"Expected {self.label_shape}, got {y.shape}"
         return y
 
-    def get_batch_labels(self, metas, device='cpu'):
+    def get_batch_labels(self, metas, device='mps'):
         ys, infos = [], []
         for meta in metas:
             label = self.get_label(**meta)

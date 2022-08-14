@@ -215,7 +215,7 @@ def make_model(model, device, hps, levels=None):
     hps.sample_length = vqvae.sample_length
     if levels is None:
         levels = range(len(priors))
-    priors = [make_prior(setup_hparams(priors[level], dict()), vqvae, 'cpu') for level in levels]
+    priors = [make_prior(setup_hparams(priors[level], dict()), vqvae, 'mps') for level in levels]
     return vqvae, priors
 
 def save_outputs(model, device, hps):
